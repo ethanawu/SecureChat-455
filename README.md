@@ -20,10 +20,12 @@ Installation
 clone into repo
 cd 455-SecureChat
 
-Install dependencies:
+
 
 Install the necessary packages by running:
+
 npm install
+
 npm i ws
 
 Run the Server:
