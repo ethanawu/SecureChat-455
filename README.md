@@ -29,7 +29,6 @@ npm install
 npm i ws
 
 Run the Server:
-Start the WebSocket server:
 
 node server.js
 The server should now be running on ws://localhost:3000.
