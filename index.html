@@ -5,25 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
+    <h2>WebSocket Chat</h2>
+    
+    <div id="login">
+        <input type="text" id="username" placeholder="Username" />
+        <input type="password" id="password" placeholder="Password" />
+        <button onclick="authenticate()">Login</button>
+        <p id="authStatus"></p>
+    </div>
+
+    <div id="chatContainer" style="display: none;">
+        <div id="chat" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;"></div>
+        <input type="text" id="message" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
     <script>
         const ws = new WebSocket("ws://localhost:3000");
+        let isAuthenticated = false;
 
         ws.addEventListener("message", function(event) {
             const data = JSON.parse(event.data);
 
-            if (data.type === "message") {
+            if (data.type === "auth") {
+                if (data.success) {
+                    isAuthenticated = true;
+                    document.getElementById("authStatus").textContent = "Authenticated!";
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("chatContainer").style.display = "block";
+                } else {
+                    document.getElementById("authStatus").textContent = "Login failed. Try again.";
+                }
+            } else if (data.type === "message") {
                 addMessage(data.data);
             }
         });
-        function sendMessage() {
-            const message = document.getElementById("message").value;
 
+        function authenticate() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (!username || !password) {
+                document.getElementById("authStatus").textContent = "Please enter credentials.";
+                return;
+            }
+
+            ws.send(JSON.stringify({ type: "auth", username, password }));
+        }
+
+        function sendMessage() {
+            if (!isAuthenticated) {
+                alert("You must be logged in to send messages.");
+                return;
+            }
+
+            const message = document.getElementById("message").value;
             if (!message) return false;
 
             ws.send(JSON.stringify({ type: "message", data: message }));
-
-            addMessage(message);
+            addMessage("Me: " + message);
             document.getElementById("message").value = "";
         }
 
