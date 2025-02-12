@@ -20,10 +20,12 @@ This is a WebSocket-based chat application that allows users to securely connect
 
 ### Steps:
 1. Clone or download the repository.
-2. Install dependencies:
+   ```bash
+   git clone https://github.com/ethanawu/SecureChat-455.git
+3. Install dependencies:
    ```bash
    npm install
-3. Place your SSL certificates (cert.pem and key.pem) in the certs/ directory.
+4. Place your SSL certificates (cert.pem and key.pem) in the certs/ directory.
 Run the server:
    ```bash
    node server.js
