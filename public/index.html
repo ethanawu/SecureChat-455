@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure WebSocket Chat</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+
+    <div id="chat-container" style="display: none;">
+        <h2>Chat</h2>
+        <div id="chat"></div>
+        <input type="text" id="message" placeholder="Type a message">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        let ws;
+        let username;
+        let isAuthenticated = false;
+        let reconnectInterval = 3000; // 3 seconds
+    
+        function login() {
+            username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (!username || !password) {
+                alert("Please enter username and password.");
+                return;
+            }
+
+            connectWebSocket(username, password); // Pass credentials directly here
+        }
+
+        function connectWebSocket(username, password) {
+            ws = new WebSocket("wss://localhost:3000");
+
+            ws.addEventListener("open", () => {
+                console.log("Connected to server");
+                ws.send(JSON.stringify({ type: "auth", username, password }));
+            });
+            
+            ws.addEventListener("message", (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            });
+
+            ws.addEventListener("close", () => {
+                console.log("Connection lost. Attempting to reconnect...");
+                setTimeout(() => connectWebSocket(username, password), reconnectInterval);
+            });
+
+            ws.addEventListener("pong", () => {
+                console.log("Heartbeat received");
+            });
+        }
+
+        function handleMessage(data) {
+            if (data.type === "auth") {
+                if (data.success) {
+                    isAuthenticated = true;
+                    document.getElementById("chat-container").style.display = "block";
+                    document.getElementById("username").disabled = true;
+                    document.getElementById("password").disabled = true;
+                } else {
+                    alert("Invalid login credentials!");
+                    ws.close();
+                }
+            } else if (data.type === "message") {
+                addMessage(`${data.username}: ${data.data}`);
+            } else if (data.type === "system") {
+                addMessage(`[SYSTEM]: ${data.message}`);
+            } else if (data.type === "error") {
+                alert(data.message);
+            }
+        }
+
+        function sendMessage() {
+            const message = document.getElementById("message").value;
+            if (!message || !isAuthenticated) return;
+
+            ws.send(JSON.stringify({ type: "message", data: message }));
+            addMessage(`You: ${message}`);
+            document.getElementById("message").value = "";
+        }
+
+        function addMessage(message) {
+            const node = document.createElement("p");
+            const text = document.createTextNode(message);
+            node.appendChild(text);
+            document.getElementById("chat").appendChild(node);
+        }
+    </script>
+</body>
+</html>

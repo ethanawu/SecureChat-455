@@ -1,103 +1,101 @@
+import fs from "fs";
+import https from "https";
 import WebSocket, { WebSocketServer } from "ws";
+import express from "express";
+import path from "path"; // Required for working with file paths
+import url from "url"; // For working with URLs
 
-// hardcoded user credentials
+const app = express();
+
+// Get the current directory path
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
+// Serve static files (like index.html) from the "public" folder
+app.use(express.static(path.join(__dirname, "public")));
+
+// Serve index.html when visiting the root URL
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Create an HTTPS server with SSL certificates
+const server = https.createServer({
+  cert: fs.readFileSync("certs/cert.pem"),
+  key: fs.readFileSync("certs/key.pem"),
+}, app);
+
+// Create a WebSocket server
+const wss = new WebSocketServer({ server });
+
 const users = {
   user1: "password123",
   user2: "securepass",
 };
 
-// rate limiting settings
-const MESSAGE_LIMIT = 5; // max messages
-const TIME_FRAME = 10000; // 10 seconds
+const clients = new Map();
 
-const wss = new WebSocketServer({ port: 3000 });
-const clients = new Map(); // store user sessions
-
-wss.on("connection", function connection(ws) {
+wss.on("connection", (ws) => {
   ws.isAuthenticated = false;
-  ws.username = null;
-  ws.messageCount = 0;
-  ws.lastMessageTime = Date.now();
 
-  ws.on("message", function message(message) {
+  ws.on("message", (message) => {
     const data = JSON.parse(message);
 
-    // authentication
     if (!ws.isAuthenticated) {
       if (data.type === "auth") {
-        const { username, password } = data;
-        if (users[username] && users[username] === password) {
+        if (users[data.username] === data.password) {
           ws.isAuthenticated = true;
-          ws.username = username;
-          clients.set(username, ws); // track connected users
-          ws.send(JSON.stringify({ type: "auth", success: true, message: "Authenticated" }));
+          ws.username = data.username;
+          clients.set(data.username, ws);
+          ws.send(JSON.stringify({ type: "auth", success: true }));
 
-          // notify others that user joined
-          broadcast({ type: "system", message: `${username} joined the chat.` }, ws);
+          // Notify all other clients that the user has connected
+          wss.clients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: "system",
+                message: `${ws.username} connected`,
+              }));
+            }
+          });
         } else {
-          ws.send(JSON.stringify({ type: "auth", success: false, message: "Invalid credentials" }));
+          ws.send(JSON.stringify({ type: "auth", success: false }));
           ws.close();
         }
-      } else {
-        ws.send(JSON.stringify({ type: "error", message: "Authentication required" }));
-        ws.close();
       }
       return;
     }
 
-    // rate limiting
-    const currentTime = Date.now();
-    if (currentTime - ws.lastMessageTime > TIME_FRAME) {
-      ws.messageCount = 0;
-    }
-    ws.lastMessageTime = currentTime;
-    ws.messageCount++;
-
-    if (ws.messageCount > MESSAGE_LIMIT) {
-      ws.send(JSON.stringify({ type: "error", message: "Rate limit exceeded. Please wait." }));
-      return;
-    }
-
-    // chat messages
     if (data.type === "message") {
-      broadcast({ type: "message", username: ws.username, data: data.data }, ws);
+      wss.clients.forEach((client) => {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: "message",
+            username: ws.username,
+            data: data.data,
+          }));
+        }
+      });
     }
   });
 
-  // handle disconnection
   ws.on("close", () => {
     if (ws.isAuthenticated) {
       clients.delete(ws.username);
-      broadcast({ type: "system", message: `${ws.username} left the chat.` });
-    }
-  });
 
-  // keep connection alive
-  ws.isAlive = true;
-  ws.on("pong", () => {
-    ws.isAlive = true;
+      // Notify all other clients that the user has disconnected
+      wss.clients.forEach((client) => {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: "system",
+            message: `${ws.username} disconnected`,
+          }));
+        }
+      });
+    }
   });
 });
 
-// Broadcast message to all clients except sender
-function broadcast(message, sender = null) {
-  wss.clients.forEach((client) => {
-    if (client !== sender && client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(message));
-    }
-  });
-}
-
-// Heartbeat interval (Detect disconnected clients)
-setInterval(() => {
-  wss.clients.forEach((ws) => {
-    if (!ws.isAlive) {
-      ws.terminate(); // Force disconnect
-    } else {
-      ws.isAlive = false;
-      ws.ping(); // Send heartbeat ping
-    }
-  });
-}, 10000); // Every 10 seconds
-
-console.log("WebSocket server running on ws://localhost:3000");
+// Start HTTPS server
+server.listen(3000, () => {
+  console.log("Secure WebSocket server running on https://localhost:3000");
+});
