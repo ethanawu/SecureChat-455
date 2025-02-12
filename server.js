@@ -2,18 +2,15 @@ import fs from "fs";
 import https from "https";
 import WebSocket, { WebSocketServer } from "ws";
 import express from "express";
-import path from "path"; // Required for working with file paths
-import url from "url"; // For working with URLs
+import path from "path";
+import url from "url"; 
 
 const app = express();
 
-// Get the current directory path
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-// Serve static files (like index.html) from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
-// Serve index.html when visiting the root URL
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
