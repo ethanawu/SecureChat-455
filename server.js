@@ -33,6 +33,7 @@ const users = {
 };
 
 const clients = new Map();
+const messageTimestamps = new Map(); // Store the last message timestamp for each user
 
 wss.on("connection", (ws) => {
   ws.isAuthenticated = false;
@@ -40,6 +41,7 @@ wss.on("connection", (ws) => {
   ws.on("message", (message) => {
     const data = JSON.parse(message);
 
+    // Handle authentication
     if (!ws.isAuthenticated) {
       if (data.type === "auth") {
         if (users[data.username] === data.password) {
@@ -65,7 +67,25 @@ wss.on("connection", (ws) => {
       return;
     }
 
+    // Handle messages and apply rate limiting
     if (data.type === "message") {
+      const now = Date.now();
+      const lastMessageTime = messageTimestamps.get(ws.username) || 0;
+
+      // Check rate limit (1 message per second)
+      if (now - lastMessageTime < 1000) {
+        // Reject the message if the user exceeds the rate limit
+        ws.send(JSON.stringify({
+          type: "error",
+          message: "You are sending messages too quickly. Please wait a moment.",
+        }));
+        return;
+      }
+
+      // Update the last message timestamp for the user
+      messageTimestamps.set(ws.username, now);
+
+      // Broadcast the message to all other clients
       wss.clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify({
@@ -81,7 +101,6 @@ wss.on("connection", (ws) => {
   ws.on("close", () => {
     if (ws.isAuthenticated) {
       clients.delete(ws.username);
-
       // Notify all other clients that the user has disconnected
       wss.clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
