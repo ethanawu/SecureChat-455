@@ -23,3 +23,7 @@ This is a WebSocket-based chat application that allows users to securely connect
 2. Install dependencies:
    ```bash
    npm install
+3. Place your SSL certificates (cert.pem and key.pem) in the certs/ directory.
+Run the server:
+   ```bash
+   node server.js
