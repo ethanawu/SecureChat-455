@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
-    <h2>Login</h2>
+    <h2>Login</h2> 
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button onclick="login()">Login</button>
@@ -23,6 +23,7 @@
         let isAuthenticated = false;
         let reconnectInterval = 3000; // 3 seconds
 
+        // Establish Websocket connection
         function connectWebSocket() {
             ws = new WebSocket("ws://localhost:3000");
 
@@ -55,16 +56,19 @@
                 }
             });
 
+            // Auto reconnect on connection lost
             ws.addEventListener("close", () => {
                 console.log("Connection lost. Attempting to reconnect...");
                 setTimeout(connectWebSocket, reconnectInterval);
             });
 
+            // Listen for heartbeat
             ws.addEventListener("pong", () => {
                 console.log("Heartbeat received");
             });
         }
 
+        //Handle user login and websocket authentication
         function login() {
             username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
@@ -76,11 +80,13 @@
 
             connectWebSocket();
 
+            // Auth message
             ws.addEventListener("open", () => {
                 ws.send(JSON.stringify({ type: "auth", username, password }));
             });
         }
 
+        // Sends a chat message through wss server
         function sendMessage() {
             const message = document.getElementById("message").value;
             if (!message || !isAuthenticated) return;
@@ -90,6 +96,7 @@
             document.getElementById("message").value = "";
         }
 
+        // Adds new messages to chat window
         function addMessage(message) {
             const node = document.createElement("p");
             const text = document.createTextNode(message);
