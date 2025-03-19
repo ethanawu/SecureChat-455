@@ -11,10 +11,9 @@ const app = express();
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 app.use(express.json())
+
 // Users database
-const users = []; // ✅ Correct: users is an array
-
-
+const users = []; 
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -22,11 +21,12 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-//get users
+// Get users
 app.get('/users', (req, res) => {
   res.json(users)
 })
 
+// Register user with hashed password
 app.post("/users", async (req, res) => {
   try {
     const salt = await bcrypt.genSalt();
@@ -42,6 +42,7 @@ app.post("/users", async (req, res) => {
   }
 });
 
+// login
 app.post('/users/login', async (req, res) => {
   const user = users.find(user => user.name === req.body.name);
   if (user == null) {
