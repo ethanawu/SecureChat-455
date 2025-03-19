@@ -4,16 +4,61 @@ import WebSocket, { WebSocketServer } from "ws";
 import express from "express";
 import path from "path";
 import url from "url"; 
+import bcrypt from "bcrypt"; 
 
 const app = express();
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
+app.use(express.json())
+// Users database
+const users = []; // ✅ Correct: users is an array
+
+
 
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+//get users
+app.get('/users', (req, res) => {
+  res.json(users)
+})
+
+app.post("/users", async (req, res) => {
+  try {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    const user = { name: req.body.name, password: hashedPassword };
+    users.push(user);
+    
+    res.status(201).json({ message: "User added successfully", user });
+  } catch (error) {
+    console.error("Error hashing password:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post('/users/login', async (req, res) => {
+  const user = users.find(user => user.name === req.body.name);
+  if (user == null) {
+    return res.status(400).send('Cannot find user');
+  }
+  try {
+    if(await bcrypt.compare(req.body.password, user.password)) {
+      res.send('Success');
+    } else {
+      res.send('Not Allowed');
+    }
+  } catch {
+    res.status(500).send();
+  }
+})
+
+
 
 // Create an HTTPS server with SSL certificates
 const server = https.createServer({
@@ -24,10 +69,7 @@ const server = https.createServer({
 // Create a WebSocket server
 const wss = new WebSocketServer({ server });
 
-const users = {
-  user1: "password123",
-  user2: "securepass",
-};
+
 
 const clients = new Map();
 const messageTimestamps = new Map(); // Store the last message timestamp for each user
