@@ -1,11 +1,17 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>WebSocket Chat</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure WebSocket Chat</title>
 </head>
 <body>
-    <h2>Login</h2> 
+    <h2>Register</h2>
+    <input type="text" id="reg-username" placeholder="Username">
+    <input type="password" id="reg-password" placeholder="Password">
+    <button onclick="register()">Register</button>
+
+    <h2>Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button onclick="login()">Login</button>
@@ -15,61 +21,29 @@
         <div id="chat"></div>
         <input type="text" id="message" placeholder="Type a message">
         <button onclick="sendMessage()">Send</button>
+        <button onclick="logout()">Logout</button>
     </div>
 
     <script>
         let ws;
         let username;
         let isAuthenticated = false;
-        let reconnectInterval = 3000; // 3 seconds
 
-        // Establish Websocket connection
-        function connectWebSocket() {
-            ws = new WebSocket("ws://localhost:3000");
+        async function register() {
+            const regUsername = document.getElementById("reg-username").value;
+            const regPassword = document.getElementById("reg-password").value;
 
-            ws.addEventListener("open", () => {
-                console.log("Connected to server");
-                if (isAuthenticated) {
-                    ws.send(JSON.stringify({ type: "auth", username, password: "" }));
-                }
+            const response = await fetch("/users/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: regUsername, password: regPassword })
             });
 
-            ws.addEventListener("message", (event) => {
-                const data = JSON.parse(event.data);
-
-                if (data.type === "auth") {
-                    if (data.success) {
-                        isAuthenticated = true;
-                        document.getElementById("chat-container").style.display = "block";
-                        document.getElementById("username").disabled = true;
-                        document.getElementById("password").disabled = true;
-                    } else {
-                        alert("Invalid login credentials!");
-                        ws.close();
-                    }
-                } else if (data.type === "message") {
-                    addMessage(`${data.username}: ${data.data}`);
-                } else if (data.type === "system") {
-                    addMessage(`[SYSTEM]: ${data.message}`);
-                } else if (data.type === "error") {
-                    alert(data.message);
-                }
-            });
-
-            // Auto reconnect on connection lost
-            ws.addEventListener("close", () => {
-                console.log("Connection lost. Attempting to reconnect...");
-                setTimeout(connectWebSocket, reconnectInterval);
-            });
-
-            // Listen for heartbeat
-            ws.addEventListener("pong", () => {
-                console.log("Heartbeat received");
-            });
+            const result = await response.json();
+            alert(result.message || result.error);
         }
 
-        //Handle user login and websocket authentication
-        function login() {
+        async function login() {
             username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
@@ -78,15 +52,46 @@
                 return;
             }
 
-            connectWebSocket();
+            const response = await fetch("/users/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: username, password })
+            });
 
-            // Auth message
+            const result = await response.json();
+            if (result.message === "Login successful") {
+                connectWebSocket(username, password);
+            } else {
+                alert("Invalid login credentials!");
+            }
+        }
+
+        function connectWebSocket(username, password) {
+            ws = new WebSocket("wss://localhost:3000");
+
             ws.addEventListener("open", () => {
                 ws.send(JSON.stringify({ type: "auth", username, password }));
             });
+
+            ws.addEventListener("message", (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            });
+
+            ws.addEventListener("close", () => {
+                console.log("Connection lost.");
+            });
         }
 
-        // Sends a chat message through wss server
+        function handleMessage(data) {
+            if (data.type === "auth" && data.success) {
+                isAuthenticated = true;
+                document.getElementById("chat-container").style.display = "block";
+            } else if (data.type === "message") {
+                addMessage(`${data.username}: ${data.data}`);
+            }
+        }
+
         function sendMessage() {
             const message = document.getElementById("message").value;
             if (!message || !isAuthenticated) return;
@@ -96,12 +101,16 @@
             document.getElementById("message").value = "";
         }
 
-        // Adds new messages to chat window
         function addMessage(message) {
             const node = document.createElement("p");
-            const text = document.createTextNode(message);
-            node.appendChild(text);
+            node.textContent = message;
             document.getElementById("chat").appendChild(node);
+        }
+
+        function logout() {
+            if (ws) ws.close();
+            isAuthenticated = false;
+            document.getElementById("chat-container").style.display = "none";
         }
     </script>
 </body>

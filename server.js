@@ -3,102 +3,73 @@ import https from "https";
 import WebSocket, { WebSocketServer } from "ws";
 import express from "express";
 import path from "path";
-import url from "url"; 
-import bcrypt from "bcrypt"; 
+import url from "url";
+import bcrypt from "bcrypt";
 
 const app = express();
-
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+app.use(express.json());
 
-app.use(express.json())
-
-// Users database
-const users = []; 
-
+const users = [];
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Get users
-app.get('/users', (req, res) => {
-  res.json(users)
-})
+// register route
+app.post("/users/register", async (req, res) => {
+  const { name, password } = req.body;
+  if (!name || !password) return res.status(400).json({ error: "Missing credentials" });
 
-// Register user with hashed password
-app.post("/users", async (req, res) => {
-  try {
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+  const existingUser = users.find(user => user.name === name);
+  if (existingUser) return res.status(400).json({ error: "User already exists" });
 
-    const user = { name: req.body.name, password: hashedPassword };
-    users.push(user);
-    
-    res.status(201).json({ message: "User added successfully", user });
-  } catch (error) {
-    console.error("Error hashing password:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+  const hashedPassword = await bcrypt.hash(password, 10);
+  users.push({ name, password: hashedPassword });
+
+  res.status(201).json({ message: "User registered successfully" });
 });
 
-// login
-app.post('/users/login', async (req, res) => {
-  const user = users.find(user => user.name === req.body.name);
-  if (user == null) {
-    return res.status(400).send('Cannot find user');
+// login route
+app.post("/users/login", async (req, res) => {
+  const { name, password } = req.body;
+  const user = users.find(user => user.name === name);
+  
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(400).json({ error: "Invalid credentials" });
   }
-  try {
-    if(await bcrypt.compare(req.body.password, user.password)) {
-      res.send('Success');
-    } else {
-      res.send('Not Allowed');
-    }
-  } catch {
-    res.status(500).send();
-  }
-})
 
+  res.json({ message: "Login successful" });
+});
 
-
-// Create an HTTPS server with SSL certificates
 const server = https.createServer({
   cert: fs.readFileSync("certs/cert.pem"),
   key: fs.readFileSync("certs/key.pem"),
 }, app);
 
-// Create a WebSocket server
 const wss = new WebSocketServer({ server });
-
-
-
 const clients = new Map();
-const messageTimestamps = new Map(); // Store the last message timestamp for each user
+const messageTimestamps = new Map();
 
 wss.on("connection", (ws) => {
   ws.isAuthenticated = false;
 
-  ws.on("message", (message) => {
+  ws.on("message", async (message) => {
     const data = JSON.parse(message);
 
-    // Handle authentication
     if (!ws.isAuthenticated) {
       if (data.type === "auth") {
-        if (users[data.username] === data.password) {
+        const user = users.find(user => user.name === data.username);
+        if (user && await bcrypt.compare(data.password, user.password)) {
           ws.isAuthenticated = true;
           ws.username = data.username;
-          clients.set(data.username, ws);
+          clients.set(ws.username, ws);
+
           ws.send(JSON.stringify({ type: "auth", success: true }));
 
-          // Notify all other clients that the user has connected
-          wss.clients.forEach((client) => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify({
-                type: "system",
-                message: `${ws.username} connected`,
-              }));
-            }
-          });
+          // notify all clients of new connection
+          broadcast({ type: "system", message: `${ws.username} joined the chat` }, ws);
         } else {
           ws.send(JSON.stringify({ type: "auth", success: false }));
           ws.close();
@@ -107,54 +78,40 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    // Handle messages and apply rate limiting
     if (data.type === "message") {
       const now = Date.now();
       const lastMessageTime = messageTimestamps.get(ws.username) || 0;
 
-      // Check rate limit (1 message per second)
       if (now - lastMessageTime < 1000) {
-        // Reject the message if the user exceeds the rate limit
-        ws.send(JSON.stringify({
-          type: "error",
-          message: "You are sending messages too quickly. Please wait a moment.",
-        }));
+        ws.send(JSON.stringify({ type: "error", message: "Too many messages! Wait a second." }));
         return;
       }
 
-      // Update the last message timestamp for the user
       messageTimestamps.set(ws.username, now);
-
-      // Broadcast the message to all other clients
-      wss.clients.forEach((client) => {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: "message",
-            username: ws.username,
-            data: data.data,
-          }));
-        }
-      });
+      broadcast({ type: "message", username: ws.username, data: data.data }, ws);
     }
   });
 
   ws.on("close", () => {
     if (ws.isAuthenticated) {
       clients.delete(ws.username);
-      // Notify all other clients that the user has disconnected
-      wss.clients.forEach((client) => {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: "system",
-            message: `${ws.username} disconnected`,
-          }));
-        }
-      });
+      
+      // notify all clients of disconnection
+      broadcast({ type: "system", message: `${ws.username} left the chat` }, ws);
     }
   });
 });
 
-// Start HTTPS server
+// Broadcast to all connected clients except sender
+function broadcast(data, sender) {
+  wss.clients.forEach(client => {
+    if (client !== sender && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(data));
+    }
+  });
+}
+
+// Start server
 server.listen(3000, () => {
   console.log("Secure WebSocket server running on https://localhost:3000");
 });
