@@ -14,7 +14,7 @@ app.use(express.json());
 // Rate limiter for login & register endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: 10, // Limit each IP to 10 requests per windowMs
   message: { error: "Too many attempts. Please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
