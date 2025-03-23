@@ -50,6 +50,7 @@
     "dunder-proto": "^1.0.1",
     "ecdsa-sig-formatter": "^1.0.11",
     "ee-first": "^1.1.1",
+    "emoji-picker-react": "^4.12.2",
     "emoji-regex": "^8.0.0",
     "encodeurl": "^2.0.0",
     "es-define-property": "^1.0.1",
@@ -197,5 +198,10 @@
   "bugs": {
     "url": "https://github.com/ethanawu/SecureChat-455/issues"
   },
-  "homepage": "https://github.com/ethanawu/SecureChat-455#readme"
+  "homepage": "https://github.com/ethanawu/SecureChat-455#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.15"
+  }
 }
