@@ -184,10 +184,9 @@
     "yallist": "^4.0.0"
   },
   "scripts": {
-  "start": "node server.js",
-  "dev": "nodemon server.js"
-}
-,
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ethanawu/SecureChat-455.git"
