@@ -1,60 +1,54 @@
-# Secure WebSocket Chat Application
+# SecureChat – Real-Time WebSocket Chat Application
 
 ## Overview
 
-This is a WebSocket-based chat application that allows users to securely connect, authenticate, and communicate in real-time. It features secure WebSocket connections (`wss://`), user authentication with usernames and passwords, message rate limiting, and automatic reconnection in case of dropped connections.
+SecureChat is a real-time, full-stack chat application built using **React**, **Node.js**, **Express**, **MongoDB**, and **Socket.IO**. It features secure WebSocket communication (`wss://`), user authentication, message rate limiting, file sharing, emoji support, rich text formatting, and more.
+
+Designed with simplicity, security, and accessibility in mind, SecureChat is perfect for small teams or classroom projects.
+
+---
 
 ## Features
-- Real-time messaging using WebSocket
-- Secure WebSocket connection (`wss://`)
-- User authentication (username and password)
-- Rate limiting (1 message per second per user)
-- Automatic reconnection on connection loss
-- Join/Disconnect notifications to all connected clients
 
-## Installation
+-  Real-Time Messaging with WebSockets
+-  Secure WebSocket Connection (`wss://`)
+-  User Authentication (Login & Registration)
+-  Brute-Force Protection & Rate Limiting (5 messages per 10 seconds per user)
+-  Connection Handling (Join/Leave notifications + Heartbeats)
+-  File Upload & Download with AES Encryption
+-  Emoji Picker Integration
+-  Rich Text Formatting (`*bold*`, `_italic_`, `[link](url)`)
+-  Secure File Sharing
+-  Per-Session Chat Log Files (stored as `.txt`)
+-  Responsive UI with Tailwind CSS
 
-### Prerequisites:
-- Node.js (version 14 or higher)
-- SSL certificates (`cert.pem` and `key.pem`)
+---
 
-### Steps:
-1. Clone or download the repository.
+## 📦 Installation & Setup
+
+### 🔧 Prerequisites
+- Node.js (v14+)
+- MongoDB Atlas or local MongoDB
+- SSL Certificates (`cert.pem` and `key.pem`) in `/backend/ssl/`
+
+### 🔄 Steps
+
+1. **Clone the repository**
    ```bash
    git clone https://github.com/ethanawu/SecureChat-455.git
-3. Install dependencies:
+   cd SecureChat-455
+2. **Install backend dependencies**
    ```bash
-   
    npm install
-4. Place your SSL certificates (cert.pem and key.pem) in the certs/ directory.
-Run the server:
+3. **Install frontend dependencies**
    ```bash
-   node server.js
-
-## How to Use
-
-### Step 1: Login
-1. Open the application in your browser.
-2. In the **Login** section, enter **user1** and **password123**. (username and password are hardcoded and can be changed in server.js)
-3. Click the **Login** button.
-
-   - If the credentials are correct, you will be authenticated and granted access to the chat.
-   - If the credentials are incorrect, you will receive an error message, and the WebSocket connection will be closed.
-
-### Step 2: Start Chatting
-1. Once authenticated, the **Chat** interface will appear.
-2. In the **Chat** section, you can see all messages sent by other users.
-3. To send a message, type it into the input field under **Type a message**.
-4. Click the **Send** button, or press Enter, to send your message.
-
-   - **Note**: You can only send one message per second. If you try to send a message too quickly, you will receive an error message.
-
-### Step 3: System Notifications
-- When a user connects or disconnects, a system message will appear in the chat window, notifying you of the event. 
-- The message will look like: 
-  - `[SYSTEM]: username connected`
-  - `[SYSTEM]: username disconnected`
-
-### Step 4: Logout/Disconnect
-- To disconnect from the chat, simply close the browser tab or refresh the page. The WebSocket connection will be closed, and you will be logged out.
-
+   cd frontend
+   npm install
+4. **Create a .env file in backend**
+5. **Add SSL certificates**
+6. **Start Server**
+   ```bash
+   npm run dev
+   -----
+   cd frontend
+   npm start
