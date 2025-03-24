@@ -1,17 +1,17 @@
 ### Register a new user
-POST http://localhost:5000/api/auth/register
+POST https://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "testuser",
+  "username": "testuser2",
   "password": "testpass123"
 }
 
 ### Login as user
-POST http://localhost:5000/api/auth/login
+POST https://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "testuser",
+  "username": "testuser2",
   "password": "testpass123"
 }

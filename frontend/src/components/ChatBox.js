@@ -77,10 +77,10 @@ const ChatBox = ({ username }) => {
     formData.append("file", selectedFile);
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/chat/upload",
+        "https://localhost:5000/api/chat/upload",
         formData
       );
-      const fileLink = `http://localhost:5000/api/chat/download/${res.data.file}`;
+      const fileLink = `https://localhost:5000/api/chat/download/${res.data.file}`;
       socket.emit("message", {
         sender: username,
         content: `📎 File shared: ${fileLink}`,
@@ -123,7 +123,7 @@ const ChatBox = ({ username }) => {
         <div className="chat-area h-72 overflow-y-auto border border-gray-200 rounded p-4 bg-gray-50 space-y-3">
           {messages.map((msg, index) => {
             const isFile = msg.content.includes(
-              "http://localhost:5000/api/chat/download/"
+              "https://localhost:5000/api/chat/download/"
             );
             const formattedContent = formatMessage(msg.content);
             const isOwn = msg.sender === username;
