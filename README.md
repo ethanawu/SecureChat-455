@@ -53,4 +53,4 @@ Designed with simplicity, security, and accessibility in mind, SecureChat is per
    cd frontend
    npm start
 
-Credit to [Dave ](https://www.youtube.com/@DaveGrayTeachesCode) and [WebDevSimplified](https://www.youtube.com/@WebDevSimplified) for tutorials. No code snippets were directly taken, but insead used as reference.
+Credit to [Dave ](https://www.youtube.com/@DaveGrayTeachesCode) and [WebDevSimplified](https://www.youtube.com/@WebDevSimplified) for tutorials. No code snippets were directly taken, but instead used as reference.
