@@ -1,63 +1,80 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import '../styles.css';
 
 const Register = ({ onSwitchToLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
-      setMessage('Passwords do not match.');
+      setError('Passwords do not match.');
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      await axios.post('http://localhost:5000/api/auth/register', {
         username,
-        password
+        password,
       });
-      setMessage(response.data.message);
+      setSuccess('Registration successful! Please log in.');
+      setUsername('');
+      setPassword('');
+      setConfirmPassword('');
+      setError('');
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Registration failed.');
+      console.error('Registration failed:', err);
+      setError(err.response?.data?.message || 'Registration failed.');
+      setSuccess('');
     }
   };
 
   return (
-    <div className="register-container p-6 max-w-md mx-auto bg-white rounded-xl shadow-md space-y-4">
-      <h2 className="text-2xl font-bold">Register</h2>
-      <form onSubmit={handleRegister} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Username"
-          className="w-full p-2 border rounded"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-2 border rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Confirm Password"
-          className="w-full p-2 border rounded"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
-        <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-          Register
-        </button>
-        <p className="text-sm">
-          Already have an account? <span className="text-blue-600 cursor-pointer" onClick={onSwitchToLogin}>Login</span>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full">
+        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Register</h2>
+
+        <form onSubmit={handleRegister} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="input-field w-full"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input-field w-full"
+          />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="input-field w-full"
+          />
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">{success}</p>}
+
+          <button type="submit" className="button button-blue w-full">Register</button>
+        </form>
+
+        <p className="text-center text-sm text-gray-600 mt-4">
+          Already have an account?{' '}
+          <span onClick={onSwitchToLogin} className="text-blue-600 cursor-pointer hover:underline">
+            Login
+          </span>
         </p>
-        {message && <p className="text-sm text-red-500">{message}</p>}
-      </form>
+      </div>
     </div>
   );
 };

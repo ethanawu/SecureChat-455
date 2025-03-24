@@ -1,9 +1,8 @@
 import { io } from 'socket.io-client';
 
-const socket = io('ws://localhost:5000', {
-  auth: {
-    token: localStorage.getItem('token')
-  }
+const socket = io('https://localhost:5000', {
+  transports: ['websocket'],
+  secure: true
 });
 
 export default socket;

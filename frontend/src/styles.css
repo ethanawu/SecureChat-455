@@ -1,0 +1,102 @@
+/* styles.css */
+
+/* Smooth Scroll */
+html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom Scrollbars (Optional: requires @tailwindcss/scrollbar plugin) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5); /* gray-400 */
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(75, 85, 99, 0.7); /* gray-700 */
+  }
+  
+  /* Chat Bubble Spacing */
+  .chat-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    max-width: 75%;
+    word-break: break-word;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+  
+  .chat-bubble-user {
+    background-color: #3b82f6; /* Tailwind blue-500 */
+    color: white;
+    align-self: flex-end;
+  }
+  
+  .chat-bubble-other {
+    background-color: #f3f4f6; /* Tailwind gray-100 */
+    color: #1f2937; /* gray-800 */
+    align-self: flex-start;
+  }
+  
+  .chat-bubble-system {
+    background-color: #e5e7eb; /* gray-200 */
+    color: #6b7280; /* gray-500 */
+    font-style: italic;
+    text-align: center;
+  }
+  
+  /* Buttons */
+  .button {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+  
+  .button-blue {
+    background-color: #3b82f6;
+    color: white;
+  }
+  .button-blue:hover {
+    background-color: #2563eb;
+  }
+  
+  .button-green {
+    background-color: #10b981;
+    color: white;
+  }
+  .button-green:hover {
+    background-color: #059669;
+  }
+  
+  .button-gray {
+    background-color: #e5e7eb;
+    color: #374151;
+  }
+  .button-gray:hover {
+    background-color: #d1d5db;
+  }
+  
+  /* Input Fields */
+  .input-field {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    outline: none;
+    transition: border 0.2s ease;
+  }
+  .input-field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  }
+  
+  /* Utility Helpers */
+  .text-muted {
+    color: #6b7280;
+    font-size: 0.85rem;
+  }
+  
