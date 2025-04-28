@@ -18,10 +18,7 @@ const Register = ({ onSwitchToLogin }) => {
     }
 
     try {
-      await axios.post('https://localhost:5000/api/auth/register', {
-        username,
-        password,
-      });
+      await axios.post('https://securechat-455.onrender.com/api/auth/register', { username, password });
       setSuccess('Registration successful! Please log in.');
       setUsername('');
       setPassword('');
