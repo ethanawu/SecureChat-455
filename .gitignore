@@ -1,25 +1,48 @@
-# Node
+# Node.js
 node_modules/
-.env
-*.log
-logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+dist/
+build/
 
-# VSCode
-.vscode/
+# SSL Certificates
+**/ssl/key.pem
+**/ssl/cert.pem
 
-# Frontend build
-frontend/build/
-frontend/node_modules/
-frontend/.env
+# Environment Variables
+.env
+.env.local
+.env.*.local
 
-# System
+# Logs
+logs/
+*.log
+*.txt
+logs/*.log
+logs/*.txt
+/uploads/
+
+# System Files
 .DS_Store
 Thumbs.db
 
-# Optional
+# IDEs
+.vscode/
+.idea/
+
+# React / Frontend
+frontend/node_modules/
+frontend/build/
+
+# Coverage reports
 coverage/
-chat-logs/
-tokens.json
+
+# Chat logs (if generated in a logs folder)
+backend/logs/
+backend/uploads/
+
+# Misc
+*.bak
+*.swp
+*.rest
