@@ -1,36 +1,17 @@
 const express = require('express');
-const fs = require('fs');
-const https = require('https'); // ← Correct HTTPS server
+const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs'); // ← keep this for logs
 const { RateLimiterMemory } = require('rate-limiter-flexible');
-
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
 
 dotenv.config();
 const app = express();
-
-// Load SSL credentials
-const credentials = {
-  key: fs.readFileSync('./ssl/key.pem'),
-  cert: fs.readFileSync('./ssl/cert.pem'),
-};
-
-// ⬅ Create HTTPS server
-const httpsServer = https.createServer(credentials, app);
-
-// ⬅ Attach socket.io to HTTPS server
-const io = new Server(httpsServer, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
 
 // 🔌 MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
@@ -71,8 +52,22 @@ const userMap = new Map();
 
 // ⚡ Rate limiter for WebSocket messages
 const chatRateLimiter = new RateLimiterMemory({
-  points: 5, // max 5 messages
-  duration: 10 // per 10 seconds
+  points: 5,
+  duration: 10
+});
+
+// 🔐 Start Express Server
+const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, () =>
+  console.log(`Server running on port ${PORT}`)
+);
+
+// Attach socket.io to the server
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
 });
 
 // 📡 Socket.io Events
@@ -87,7 +82,6 @@ io.on('connection', (socket) => {
     logMessage(`>> ${username} joined the chat.`);
   });
 
-  // 📤 Rate-limited messaging
   socket.on('message', async (msg) => {
     try {
       await chatRateLimiter.consume(socket.id);
@@ -116,9 +110,3 @@ io.on('connection', (socket) => {
     console.log(`User disconnected: ${socket.id}`);
   });
 });
-
-// 🔐 Start HTTPS server
-const PORT = process.env.PORT || 5000;
-httpsServer.listen(PORT, () =>
-  console.log(`🔐 Secure server running at https://localhost:${PORT}`)
-);
