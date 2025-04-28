@@ -27,7 +27,7 @@ const httpsServer = https.createServer(credentials, app);
 // ⬅ Attach socket.io to HTTPS server
 const io = new Server(httpsServer, {
   cors: {
-    origin: 'https://localhost:3000',
+    origin: '*',
     methods: ['GET', 'POST']
   }
 });
