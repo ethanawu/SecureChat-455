@@ -119,9 +119,7 @@ const ChatBox = ({ username }) => {
 
         <div className="chat-area h-72 overflow-y-auto border border-gray-200 rounded p-4 bg-gray-50 space-y-3">
           {messages.map((msg, index) => {
-            const isFile = msg.content.includes(
-              "https://localhost:5000/api/chat/download/"
-            );
+            const isFile = msg.content.includes("/api/chat/download/");
             const formattedContent = formatMessage(msg.content);
             const isOwn = msg.sender === username;
             const isSystem = msg.sender === "System";

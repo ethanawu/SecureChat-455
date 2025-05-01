@@ -40,7 +40,7 @@ coverage/
 
 # Chat logs (if generated in a logs folder)
 backend/logs/
-backend/uploads/
+backend/uploads
 
 # Misc
 *.bak
