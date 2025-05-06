@@ -76,8 +76,8 @@ const ChatBox = ({ username }) => {
     const formData = new FormData();
     formData.append("file", selectedFile);
     try {
-      const res = await axios.post('https://securechat-455.onrender.com/api/chat/upload', formData);
-      const fileLink = `https://securechat-455.onrender.com/api/chat/download/${res.data.file}`;
+      const res = await axios.post('https://securechat.secure-tech.org/api/chat/upload', formData);
+      const fileLink = `https://securechat.secure-tech.org/api/chat/download/${res.data.file}`;
       socket.emit("message", {
         sender: username,
         content: `📎 File shared: ${fileLink}`,
