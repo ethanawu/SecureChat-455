@@ -7,6 +7,12 @@ SecureChat is a real-time, full-stack chat application built using **React**, **
 Designed with simplicity, security, and accessibility in mind, SecureChat is perfect for small teams or classroom projects.
 
 ---
+## 🚀 Live Hosted Service
+
+| Component  | URL |
+|------------|-----|
+| Frontend (React App) | https://securechat-frontend.vercel.app |
+| Backend (API + WebSocket server) | https://securechat.secure-tech.org |
 
 ## Features
 
